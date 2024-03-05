@@ -69,27 +69,32 @@ fn main() {
     let mut file = std::fs::File::open(file_path).expect("Cannot open file");
     let mut buf = [0_u8; 2];
     file.read_exact(&mut buf).expect("Cannot read from file");
+
+    let first_byte = buf[0];
+    let second_byte = buf[1];
+
     println!("Buf: {:?}", buf);
+    println!("First byte: {:#b}", first_byte);
+    println!("Second byte: {:#b}", second_byte);
 
-    println!("First byte: {:#b}", buf[0]);
-    println!("Second byte: {:#b}", buf[1]);
-    let opcode = buf[0] >> 2;
-
+    // Look at the most significant 6 bits to get the OPCODE
+    let opcode = first_byte >> 2;
     if opcode != MOV_OPCODE {
         eprintln!("OPCODE not supported");
         return;
     }
 
-    if !(buf[1] >> 6) == 3 {
+    // Look at the most significant 2 bits to get the addressing mode
+    if !(second_byte >> 6) == 3 {
         eprintln!("MOD not supported");
         return;
     };
 
-    let operates_on_word = (buf[0] & 0b0000_0001) == 1;
-    let destination_in_reg = (buf[0] & 0b0000_0010) >> 1 == 1;
+    let operates_on_word = (first_byte & 0b0000_0001) == 1;
+    let destination_in_reg = (first_byte & 0b0000_0010) >> 1 == 1;
 
-    let reg = (buf[1] & 0b0011_1000) >> 3;
-    let rm = buf[1] & 0b0000_0111;
+    let reg = (second_byte & 0b0011_1000) >> 3;
+    let rm = second_byte & 0b0000_0111;
 
     let reg_register = Register::new(reg, operates_on_word).unwrap();
     let rm_register = Register::new(rm, operates_on_word).unwrap();
