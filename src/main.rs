@@ -93,6 +93,7 @@ fn main() {
         let first_byte = buf[0];
         let second_byte = buf[1];
 
+        // --- Parse the first byte ---
         // Look at the most significant 6 bits to get the OPCODE
         let opcode = first_byte >> 2;
         if opcode != MOV_OPCODE {
@@ -100,14 +101,16 @@ fn main() {
             return;
         }
 
-        // Look at the most significant 2 bits to get the addressing mode
-        if !(second_byte >> 6) == 3 {
+        let operates_on_word = (first_byte & 0b0000_0001) == 1;
+        let destination_in_reg = (first_byte & 0b0000_0010) >> 1 == 1;
+
+        // --- Parse the second byte ---
+        // Look at the most significant 2 bits to get the MOD
+        let mode = second_byte >> 6;
+        if !(mode) == 3 {
             eprintln!("MOD not supported");
             return;
         };
-
-        let operates_on_word = (first_byte & 0b0000_0001) == 1;
-        let destination_in_reg = (first_byte & 0b0000_0010) >> 1 == 1;
 
         let reg = (second_byte & 0b0011_1000) >> 3;
         let rm = second_byte & 0b0000_0111;
